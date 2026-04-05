@@ -15,8 +15,8 @@ interface Props {
   initialMessages: MessageRecord[];
 }
 
-const KNOWN_CODEWORDS = (process.env.NEXT_PUBLIC_VALID_CODEWORDS ?? "")
-  .split(",").map((w) => w.trim().toLowerCase()).filter(Boolean);
+// Codewords are not exposed to the browser — groups are built dynamically from decrypted payloads
+const KNOWN_CODEWORDS: string[] = [];
 
 export function InboxClient({ initialMessages }: Props) {
   const [messages, setMessages] = useState<MessageRecord[]>(initialMessages);

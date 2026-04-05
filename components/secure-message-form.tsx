@@ -5,12 +5,19 @@ import { encryptMessage } from "@/lib/crypto/encrypt";
 
 type FormState = "idle" | "encrypting" | "submitting" | "success" | "error";
 
-const VALID_CODEWORDS: Set<string> = new Set(
-  (process.env.NEXT_PUBLIC_VALID_CODEWORDS ?? "")
+// SHA-256 hashes of valid codewords — the actual codewords never appear in the browser bundle
+const VALID_HASHES: Set<string> = new Set(
+  (process.env.NEXT_PUBLIC_VALID_CODEWORD_HASHES ?? "")
     .split(",")
-    .map((w) => w.trim().toLowerCase())
+    .map((h) => h.trim().toLowerCase())
     .filter(Boolean)
 );
+
+async function hashCodeword(codeword: string): Promise<string> {
+  const encoded = new TextEncoder().encode(codeword.trim().toLowerCase());
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 export function SecureMessageForm() {
   const [codeword, setCodeword] = useState("");
@@ -21,7 +28,7 @@ export function SecureMessageForm() {
   const publicKey = process.env.NEXT_PUBLIC_RECIPIENT_PUBLIC_KEY ?? "";
   const busy = state === "encrypting" || state === "submitting";
 
-  function handleSubmit() {
+  async function handleSubmit() {
     setErrorMsg(null);
 
     const cw = codeword.trim().toLowerCase();
@@ -33,10 +40,13 @@ export function SecureMessageForm() {
       return;
     }
 
-    if (VALID_CODEWORDS.size > 0 && !VALID_CODEWORDS.has(cw)) {
-      setState("error");
-      setErrorMsg("Invalid codeword. Please use an approved codeword.");
-      return;
+    if (VALID_HASHES.size > 0) {
+      const hash = await hashCodeword(cw);
+      if (!VALID_HASHES.has(hash)) {
+        setState("error");
+        setErrorMsg("Invalid codeword. Please use an approved codeword.");
+        return;
+      }
     }
 
     if (!msg) {
