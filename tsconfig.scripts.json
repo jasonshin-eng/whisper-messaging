@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "lib": ["es2022"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "target": "ES2022",
+    "outDir": "./dist-scripts"
+  },
+  "include": ["scripts/**/*.ts"],
+  "exclude": ["node_modules"]
+}
